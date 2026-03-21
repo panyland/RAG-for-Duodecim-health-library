@@ -1,0 +1,15 @@
+[project]
+name = "web-scraper-test"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncio>=3.4.3",
+    "crawl4ai>=0.6.3",
+    "langchain>=0.3.26",
+    "langchain-chroma>=0.2.4",
+    "langchain-ollama>=0.3.3",
+    "requests>=2.32.4",
+    "sentence-transformers>=4.1.0",
+]
