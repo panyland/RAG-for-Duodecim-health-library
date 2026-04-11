@@ -1,53 +1,58 @@
-from langchain_ollama import OllamaEmbeddings, OllamaLLM
-from langchain_chroma import Chroma
+from dotenv import load_dotenv
+from langchain_groq import ChatGroq
+
+load_dotenv()
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from vector_db import get_embeddings, get_vector_store
 
-# Load embedding function
-embeddings = OllamaEmbeddings(model="mxbai-embed-large")
-# Koita paraphrase-multilingual-MiniLM-L12-v2 mallia 
 
-# Load vector DB
-vector_store = Chroma(
-    collection_name="terveys_articles",
-    persist_directory="./terveys_chroma_db",
-    embedding_function=embeddings,
-)
+PROMPT_TEMPLATE = """Olet kokenut lääketieteen asiantuntija. Tehtäväsi on vastata käyttäjän kysymykseen ammattimaisesti ja selkeästi tietokannasta haetun sisällön perusteella.
 
-# Make retriever
-retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+Ohjeet:
+- Vastaa aina samalla kielellä kuin kysymys on esitetty.
+- Käytä täsmällistä, ammattimaista kieltä – vältä epämääräisiä ilmaisuja.
+- Rakenna vastaus loogisesti: määrittele ensin ilmiö tai tila, sitten oireet tai syyt, sitten hoito tai toimenpiteet tarpeen mukaan.
+- Jos tietokanta sisältää riittävästi tietoa, anna kattava vastaus ilman varauksia.
+- Jos tietokanta ei sisällä riittävästi tietoa kysymykseen vastaamiseksi, ilmoita se lyhyesti ja kehota kääntymään lääkärin puoleen.
+- Älä koskaan kehota lukijaa etsimään lisätietoa muualta tietokannasta tai muista artikkeleista – tietokanta on jo haettu ja kaikki relevantti tieto on alla olevassa kontekstissa.
+- Älä viittaa lähteisiin nimeltä tai mainitse tiedostojen nimiä vastauksessasi.
 
-# Load the LLM
-llm = OllamaLLM(model="llama3.2")
-
-# Create the prompt template
-template = """
-You are a medical expert assistant. Your task is to provide accurate and helpful answers to medical questions based on the provided context. 
-The context is in Finnish and may contain medical articles, research papers, or other relevant information. Provide your answers in English.
+Konteksti tietokannasta:
 {context}
 
-Question: {question}
+Kysymys: {question}
 
-Answer:
-"""
+Vastaus:"""
 
-prompt = ChatPromptTemplate.from_template(template)
-chain = prompt | llm
 
-# Chat loop
+def build_rag_chain():
+    embeddings = get_embeddings()
+    vector_store = get_vector_store(embeddings)
+    retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+    llm = ChatGroq(model="llama-3.3-70b-versatile")
+    prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+    chain = prompt | llm | StrOutputParser()
+    return retriever, chain
+
+
+def ask(question: str, retriever, chain) -> tuple[str, list]:
+    """Returns (answer, source_docs)."""
+    docs = retriever.invoke(question)
+    context = "\n\n".join(doc.page_content for doc in docs)
+    answer = chain.invoke({"context": context, "question": question})
+    return answer, docs
+
+
 if __name__ == "__main__":
-    print("MDAI - a doctor in your pocket\n(kirjoita 'exit' lopettaaksesi)\n")
+    print("Loading RAG pipeline...")
+    retriever, chain = build_rag_chain()
+    print("MDAI – a doctor in your pocket\n(type 'exit' to quit)\n")
     while True:
         question = input("How can I help you? ")
         if question.lower() == "exit":
             break
-
-        # Retrieve docs
-        context_docs = retriever.invoke(question)
-        context_text = "\n\n".join([doc.page_content for doc in context_docs])
-
-        # Generate response
-        answer = chain.invoke({"context": context_text, "question": question})
-        print("\n🧠 Vastaus:\n")
-        print(answer)
-        print("\n" + "=" * 40 + "\n")
-
+        answer, docs = ask(question, retriever, chain)
+        print(f"\nAnswer:\n{answer}\n")
+        print("Sources:", [d.metadata.get("source", "?") for d in docs])
+        print("\n" + "=" * 60 + "\n")

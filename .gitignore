@@ -1,3 +1,13 @@
+# Python
 .venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment / secrets — never commit these
+.env
+*.env
+
+# Data — too large for git, users generate these locally
 terveys_markdown/
 terveys_chroma_db/
