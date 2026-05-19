@@ -11,3 +11,6 @@ __pycache__/
 # Data — too large for git, users generate these locally
 terveys_markdown/
 terveys_chroma_db/
+terveys_structured/
+
+CLAUDE.md

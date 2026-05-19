@@ -67,6 +67,10 @@ st.markdown(
         margin: 3px 3px 0 0;
         color: #004f9e;
         font-family: monospace;
+        text-decoration: none;
+    }
+    .source-pill:hover {
+        background: #ccdff0;
     }
     </style>
     """,
@@ -83,6 +87,13 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+def source_pill_html(src: str) -> str:
+    if src.startswith("http"):
+        label = src.rstrip("/").split("/")[-1]
+        return f'<a href="{src}" target="_blank" class="source-pill">{label}</a>'
+    return f'<span class="source-pill">{src}</span>'
+
 
 # ── Load RAG chain ───────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner="Ladataan tietokantaa...")
@@ -124,10 +135,7 @@ for msg in st.session_state.messages:
         if msg["role"] == "assistant" and msg.get("sources"):
             with st.expander("Lähteet", expanded=False):
                 for src in msg["sources"]:
-                    st.markdown(
-                        f'<span class="source-pill">{src}</span>',
-                        unsafe_allow_html=True,
-                    )
+                    st.markdown(source_pill_html(src), unsafe_allow_html=True)
 
 # ── Chat input ────────────────────────────────────────────────────────────────
 if question := st.chat_input("Kirjoita kysymyksesi tähän..."):
@@ -141,14 +149,14 @@ if question := st.chat_input("Kirjoita kysymyksesi tähän..."):
 
         st.markdown(answer)
 
-        sources = list({d.metadata.get("source", "unknown") for d in docs})
+        sources = list({
+            d.metadata.get("url") or d.metadata.get("source", "unknown")
+            for d in docs
+        })
         if sources:
             with st.expander("Lähteet", expanded=False):
                 for src in sources:
-                    st.markdown(
-                        f'<span class="source-pill">{src}</span>',
-                        unsafe_allow_html=True,
-                    )
+                    st.markdown(source_pill_html(src), unsafe_allow_html=True)
 
     st.session_state.messages.append(
         {"role": "assistant", "content": answer, "sources": sources}
