@@ -17,7 +17,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_groq import ChatGroq
+from langchain_anthropic import ChatAnthropic
 
 from vector_db import extract_article_content
 
@@ -53,7 +53,7 @@ Artikkeli:
 
 def get_llm():
     # Swap this one line to change LLM provider
-    return ChatGroq(model="llama-3.1-8b-instant", temperature=0)
+    return ChatAnthropic(model="claude-haiku-4-5-20251001", temperature=0)
 
 
 def _parse_retry_after(error_message: str) -> float:
