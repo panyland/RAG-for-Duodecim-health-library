@@ -34,7 +34,12 @@ def get_llm():
 def build_rag_chain():
     embeddings = get_embeddings()
     vector_store = get_vector_store(embeddings)
-    retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+    # MMR over plain similarity: chunk-level top-k otherwise collapses onto one or two
+    # articles (a diabetes query returned 5 chunks spanning only 3 distinct sources).
+    retriever = vector_store.as_retriever(
+        search_type="mmr",
+        search_kwargs={"k": 5, "fetch_k": 30, "lambda_mult": 0.5},
+    )
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     chain = prompt | llm | StrOutputParser()

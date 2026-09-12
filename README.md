@@ -17,7 +17,7 @@ Terveyskirjasto website
                            to an LLM (Groq / gpt-oss-120b) for a grounded answer
 ```
 
-The embedding model (`paraphrase-multilingual-MiniLM-L12-v2`) supports Finnish natively, so both the indexing and retrieval steps handle Finnish text correctly.
+The embedding model (`intfloat/multilingual-e5-base`) supports Finnish natively, so both the indexing and retrieval steps handle Finnish text correctly. It accepts 512 tokens per chunk, and `vector_db.py` caps chunks well under that so no text is lost at indexing time.
 
 ---
 
@@ -63,13 +63,19 @@ uv run python main.py
 
 ### 4. Index the vector database
 
-This must be run before the app, and re-run any time the embedding model changes. It reads `terveys_markdown/`, splits the articles by heading structure, embeds them, and writes the result to `terveys_chroma_db/`.
+This must be run before the app, and re-run any time the embedding model changes. It reads `terveys_markdown/`, strips boilerplate, splits the articles by heading structure and then by size, embeds them, and writes the result to `terveys_chroma_db/`.
+
+Use `--reset` when the embedding model changes, since the vector dimensions change with it:
+
+```bash
+uv run python vector_db.py --reset
+```
 
 ```bash
 uv run python vector_db.py
 ```
 
-Indexing takes roughly 15–30 minutes on CPU for the full article set (~11,000 files).
+Indexing uses the GPU automatically when one is available. The full article set (~11,000 files, ~65,000 chunks) took about 19 minutes on a GTX 1070. Set `MDAI_DEVICE=cpu` to force CPU, where it takes considerably longer.
 
 ### 5. Launch the app
 
@@ -99,4 +105,6 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 ## Planned improvements
 
+- Hybrid BM25 + vector retrieval
+- Cross-encoder reranking
 - Knowledge graph for multi-hop inference
