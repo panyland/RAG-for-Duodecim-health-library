@@ -26,11 +26,16 @@ Kysymys: {question}
 Vastaus:"""
 
 
+def get_llm():
+    # Swap this one line to change LLM provider
+    return ChatGroq(model="openai/gpt-oss-120b", temperature=0)
+
+
 def build_rag_chain():
     embeddings = get_embeddings()
     vector_store = get_vector_store(embeddings)
     retriever = vector_store.as_retriever(search_kwargs={"k": 5})
-    llm = ChatGroq(model="llama-3.3-70b-versatile")
+    llm = get_llm()
     prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
     return retriever, chain

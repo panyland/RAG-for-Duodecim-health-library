@@ -14,7 +14,7 @@ Terveyskirjasto website
         |
    [3] app.py           — Streamlit chat UI: takes your question, retrieves the 5
                            most relevant article chunks, and sends them as context
-                           to an LLM (Groq / llama-3.3-70b) for a grounded answer
+                           to an LLM (Groq / gpt-oss-120b) for a grounded answer
 ```
 
 The embedding model (`paraphrase-multilingual-MiniLM-L12-v2`) supports Finnish natively, so both the indexing and retrieval steps handle Finnish text correctly.
@@ -24,7 +24,7 @@ The embedding model (`paraphrase-multilingual-MiniLM-L12-v2`) supports Finnish n
 ## Accounts you need
 
 ### Groq (LLM — free)
-The app uses Groq to run `llama-3.3-70b-versatile`. Groq's free tier allows 14,400 requests/day.
+The app uses Groq to run `openai/gpt-oss-120b`. Groq's free tier is generous enough for normal use.
 
 1. Sign up at [console.groq.com](https://console.groq.com)
 2. Go to **API Keys** → **Create API Key**
