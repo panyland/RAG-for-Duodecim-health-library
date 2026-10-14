@@ -1,4 +1,4 @@
-# MDAI – Terveyskirjasto RAG Assistant
+# Terveyskirjasto AI Assistant
 
 A Retrieval-Augmented Generation (RAG) application for querying the Finnish health library [Terveyskirjasto](https://www.terveyskirjasto.fi), published by Duodecim. Ask medical questions in Finnish or English and get answers grounded in the article database.
 
